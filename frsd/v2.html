@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solveur de Labyrinthe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .maze-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        #maze {
+            border: 3px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .steps {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .step {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .debug {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐢 Solveur de Labyrinthe de la Tortue Robot</h1>
+        
+        <div class="controls">
+            <input type="file" id="fileInput" accept=".txt" style="display: none;" onchange="loadFile()">
+            <button onclick="document.getElementById('fileInput').click()">📁 Importer fichier .txt</button>
+            <button onclick="generateMaze()" id="generateBtn" disabled>Générer le Labyrinthe</button>
+            <button onclick="solveMaze()" id="solveBtn" disabled>Résoudre</button>
+            <button onclick="animateSolution()" id="animateBtn" disabled>Animer la Solution</button>
+            <button onclick="resetMaze()" id="resetBtn" disabled>Reset</button>
+            <button onclick="toggleDebug()" id="debugBtn" style="background: linear-gradient(45deg, #3498db, #2980b9);">Debug</button>
+        </div>
+        
+        <div class="info" id="info">
+            Cliquez sur "📁 Importer fichier .txt" pour charger vos données de labyrinthe
+        </div>
+        
+        <div class="maze-container">
+            <canvas id="maze" width="800" height="400"></canvas>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #2c3e50;"></div>
+                <span>Mur</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ecf0f1;"></div>
+                <span>Chemin libre</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #27ae60;"></div>
+                <span>Départ</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e74c3c;"></div>
+                <span>Arrivée</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f39c12;"></div>
+                <span>Solution</span>
+            </div>
+        </div>
+        
+        <div class="debug" id="debug" style="display: none;">
+            <h4>🔍 Informations de debug:</h4>
+            <div id="debugInfo"></div>
+        </div>
+        
+        <div class="steps" id="steps" style="display: none;">
+            <h3>🎯 Étapes de résolution :</h3>
+            <div id="stepsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let canvas, ctx;
+        let maze = [];
+        let originalData = [];
+        let width, height;
+        let cellSize = 8;
+        let solution = [];
+        let animationIndex = 0;
+        let isAnimating = false;
+        let mazeData = "";
+        let debugMode = false;
+        
+        function init() {
+            canvas = document.getElementById('maze');
+            ctx = canvas.getContext('2d');
+        }
+        
+        function toggleDebug() {
+            debugMode = !debugMode;
+            const debugDiv = document.getElementById('debug');
+            debugDiv.style.display = debugMode ? 'block' : 'none';
+            if (debugMode && originalData.length > 0) {
+                updateDebugInfo();
+            }
+        }
+        
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            let info = `Dimensions: ${width} x ${height}<br>`;
+            info += `Première ligne (5 premières valeurs): ${originalData[0] ? originalData[0].slice(0, 5).join(', ') : 'N/A'}<br>`;
+            info += `Dernière ligne (5 premières valeurs): ${originalData[originalData.length-1] ? originalData[originalData.length-1].slice(0, 5).join(', ') : 'N/A'}<br>`;
+            info += `Case départ [0,0]: ${maze[0] ? maze[0][0] : 'N/A'}<br>`;
+            info += `Case arrivée [${height-1},${width-1}]: ${maze[height-1] ? maze[height-1][width-1] : 'N/A'}<br>`;
+            info += `Valeurs uniques trouvées: ${getUniqueValues().join(', ')}<br>`;
+            debugInfo.innerHTML = info;
+        }
+        
+        function getUniqueValues() {
+            const values = new Set();
+            for (let row of originalData) {
+                for (let val of row) {
+                    values.add(val);
+                }
+            }
+            return Array.from(values).sort((a, b) => a - b);
+        }
+        
+        async function loadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const lines = text.split('\n');
+                let mazeLines = [];
+                let foundData = false;
+                
+                console.log('Nombre de lignes dans le fichier:', lines.length);
+                
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    // Ignorer les lignes de description/titre
+                    if (line.toLowerCase().includes('largeur') || line.toLowerCase().includes('hauteur') || 
+                        line.includes('Sur l\'esplanade') || line.includes('texte:') ||
+                        line.includes('D\'une part') || line.includes('D\'autre part') ||
+                        line.includes('Le jardinier')) {
+                        console.log('Ligne ignorée (description):', line.substring(0, 50));
+                        continue;
+                    }
+                    
+                    // Chercher les lignes avec des données numériques
+                    if (/^\d+/.test(line)) {
+                        foundData = true;
+                        console.log(`Ligne ${i} trouvée:`, line.substring(0, 100));
+                        
+                        // Séparer les nombres (espaces ou virgules)
+                        const numbers = line.split(/[\s,]+/).filter(n => n && !isNaN(n) && n.trim() !== '').map(Number);
+                        console.log(`Nombres extraits (${numbers.length}):`, numbers.slice(0, 10));
+                        
+                        // Garder TOUS les nombres (ne pas ignorer le premier)
+                        if (numbers.length > 0) {
+                            const rowData = numbers.filter(n => n >= 0 && n < 1000);
+                            if (rowData.length > 0) {
+                                mazeLines.push(rowData);
+                                console.log(`Ligne ${mazeLines.length - 1} ajoutée avec ${rowData.length} valeurs`);
+                            }
+                        }
+                        
+                        if (mazeLines.length >= 1000) {
+                            console.log('Limite de 1000 lignes atteinte');
+                            break;
+                        }
+                    }
+                }
+                
+                if (foundData && mazeLines.length > 0) {
+                    // Stocker les données originales pour debug
+                    originalData = mazeLines;
+                    
+                    height = Math.min(mazeLines.length, 500);
+                    width = Math.min(Math.max(...mazeLines.map(row => row.length)), 1000);
+                    
+                    console.log(`Dimensions calculées: ${width} x ${height}`);
+                    
+                    if (width <= 0 || height <= 0 || width > 2000 || height > 2000) {
+                        throw new Error(`Dimensions invalides: ${width} x ${height}`);
+                    }
+                    
+                    // Créer le tableau 2D du labyrinthe
+                    maze = [];
+                    for (let y = 0; y < height; y++) {
+                        maze[y] = new Array(width).fill(1);
+                    }
+                    
+                    // Remplir avec les données
+                    for (let y = 0; y < height && y < mazeLines.length; y++) {
+                        for (let x = 0; x < width && x < mazeLines[y].length; x++) {
+                            maze[y][x] = mazeLines[y][x];
+                        }
+                    }
+                    
+                    document.getElementById('info').innerHTML = `✅ Fichier chargé avec succès!<br>Labyrinthe: ${height} lignes × ${width} colonnes<br>Total: ${height * width} cases`;
+                    document.getElementById('generateBtn').disabled = false;
+                    
+                    mazeData = "loaded";
+                    
+                    if (debugMode) {
+                        updateDebugInfo();
+                    }
+                    
+                } else {
+                    document.getElementById('info').innerHTML = '❌ Aucune donnée numérique trouvée dans le fichier.';
+                }
+                
+            } catch (error) {
+                console.error('Erreur détaillée:', error);
+                document.getElementById('info').innerHTML = '❌ Erreur lors de la lecture du fichier: ' + error.message;
+            }
+        }
+        
+        function parseMazeData() {
+            // Ajuster la taille du canvas
+            cellSize = Math.min(Math.floor(800 / width), Math.floor(600 / height), 15);
+            canvas.width = width * cellSize;
+            canvas.height = height * cellSize;
+            
+            // Analyser les valeurs pour déterminer murs/passages
+            const uniqueValues = getUniqueValues();
+            console.log('Valeurs uniques dans le labyrinthe:', uniqueValues);
+            
+            // Stratégie améliorée pour déterminer les passages
+            // Si on a seulement 0 et 1, alors 0 = passage, 1 = mur
+            // Sinon, prendre la valeur la plus fréquente comme passage
+            let passageValue = 0;
+            
+            if (uniqueValues.length === 2) {
+                passageValue = Math.min(...uniqueValues); // La plus petite valeur = passage
+                console.log(`Mode binaire détecté. Passage = ${passageValue}`);
+            } else {
+                // Compter les fréquences
+                const frequencies = {};
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const val = maze[y][x];
+                        frequencies[val] = (frequencies[val] || 0) + 1;
+                    }
+                }
+                
+                // Prendre la valeur la plus fréquente (probablement les passages)
+                let maxFreq = 0;
+                for (let val in frequencies) {
+                    if (frequencies[val] > maxFreq) {
+                        maxFreq = frequencies[val];
+                        passageValue = parseInt(val);
+                    }
+                }
+                console.log(`Valeur de passage détectée: ${passageValue} (fréquence: ${maxFreq})`);
+            }
+            
+            // Convertir en format binaire (0 = passage, 1 = mur)
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    maze[y][x] = maze[y][x] === passageValue ? 0 : 1;
+                }
+            }
+            
+            // S'assurer que départ et arrivée sont libres
+            maze[0][0] = 0;
+            maze[height-1][width-1] = 0;
+            
+            console.log(`Case départ après conversion: ${maze[0][0]}`);
+            console.log(`Case arrivée après conversion: ${maze[height-1][width-1]}`);
+            
+            if (debugMode) {
+                updateDebugInfo();
+            }
+        }
+        
+        function generateMaze() {
+            if (!mazeData) {
+                document.getElementById('info').textContent = '❌ Aucune donnée chargée! Importez d\'abord un fichier .txt';
+                return;
+            }
+            
+            parseMazeData();
+            drawMaze();
+            document.getElementById('info').textContent = `Labyrinthe généré: ${width}x${height} cases`;
+            document.getElementById('solveBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = false;
+        }
+        
+        function drawMaze() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cellX = x * cellSize;
+                    const cellY = y * cellSize;
+                    
+                    if (maze[y][x] === 1) {
+                        // Mur
+                        ctx.fillStyle = '#2c3e50';
+                    } else {
+                        // Passage libre
+                        ctx.fillStyle = '#ecf0f1';
+                    }
+                    
+                    // Cases spéciales
+                    if (x === 0 && y === 0) {
+                        ctx.fillStyle = '#27ae60'; // Départ
+                    } else if (x === width-1 && y === height-1) {
+                        ctx.fillStyle = '#e74c3c'; // Arrivée
+                    }
+                    
+                    ctx.fillRect(cellX, cellY, cellSize, cellSize);
+                    
+                    // Bordure
+                    ctx.strokeStyle = '#bdc3c7';
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeRect(cellX, cellY, cellSize, cellSize);
+                }
+            }
+        }
+        
+        function solveMaze() {
+            console.log('Début de la résolution...');
+            console.log(`Chercher chemin de (0,0) à (${width-1},${height-1})`);
+            console.log(`Case départ libre? ${maze[0][0] === 0}`);
+            console.log(`Case arrivée libre? ${maze[height-1][width-1] === 0}`);
+            
+            solution = findPath(0, 0, width-1, height-1);
+            
+            if (solution.length > 0) {
+                drawSolution();
+                document.getElementById('info').innerHTML = `✅ Solution trouvée! Nombre de cases traversées: <strong>${solution.length}</strong>`;
+                document.getElementById('animateBtn').disabled = false;
+                showSteps();
+                console.log(`Solution trouvée avec ${solution.length} étapes`);
+            } else {
+                document.getElementById('info').textContent = '❌ Aucune solution trouvée!';
+                console.log('Aucune solution trouvée');
+                
+                // Diagnostic additionnel
+                let freeSpaces = 0;
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (maze[y][x] === 0) freeSpaces++;
+                    }
+                }
+                console.log(`Nombre total d'espaces libres: ${freeSpaces}`);
+            }
+        }
+        
+        function findPath(startX, startY, endX, endY) {
+            const queue = [{x: startX, y: startY, path: [{x: startX, y: startY}]}];
+            const visited = new Set();
+            visited.add(`${startX},${startY}`);
+            
+            const directions = [{x: 0, y: 1}, {x: 1, y: 0}, {x: 0, y: -1}, {x: -1, y: 0}];
+            let iterations = 0;
+            const maxIterations = width * height * 2; // Limite de sécurité
+            
+            while (queue.length > 0 && iterations < maxIterations) {
+                iterations++;
+                const {x, y, path} = queue.shift();
+                
+                if (x === endX && y === endY) {
+                    console.log(`Solution trouvée en ${iterations} itérations`);
+                    return path;
+                }
+                
+                for (const dir of directions) {
+                    const newX = x + dir.x;
+                    const newY = y + dir.y;
+                    const key = `${newX},${newY}`;
+                    
+                    if (newX >= 0 && newX < width && newY >= 0 && newY < height &&
+                        maze[newY][newX] === 0 && !visited.has(key)) {
+                        visited.add(key);
+                        queue.push({
+                            x: newX,
+                            y: newY,
+                            path: [...path, {x: newX, y: newY}]
+                        });
+                    }
+                }
+            }
+            
+            console.log(`Recherche terminée après ${iterations} itérations, ${visited.size} cases visitées`);
+            return [];
+        }
+        
+        function drawSolution() {
+            drawMaze();
+            
+            // Dessiner le chemin de la solution
+            ctx.fillStyle = '#f39c12';
+            for (const point of solution) {
+                if (!(point.x === 0 && point.y === 0) && !(point.x === width-1 && point.y === height-1)) {
+                    ctx.fillRect(point.x * cellSize, point.y * cellSize, cellSize, cellSize);
+                }
+            }
+            
+            // Redessiner départ et arrivée
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(0, 0, cellSize, cellSize);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect((width-1) * cellSize, (height-1) * cellSize, cellSize, cellSize);
+        }
+        
+        function animateSolution() {
+            if (!solution.length || isAnimating) return;
+            
+            isAnimating = true;
+            animationIndex = 0;
+            document.getElementById('animateBtn').disabled = true;
+            
+            function animate() {
+                if (animationIndex < solution.length) {
+                    drawMaze();
+                    
+                    // Dessiner le chemin jusqu'à l'index actuel
+                    ctx.fillStyle = '#f39c12';
+                    for (let i = 0; i <= animationIndex; i++) {
+                        const point = solution[i];
+                        if (!(point.x === 0 && point.y === 0) && !(point.x === width-1 && point.y === height-1)) {
+                            ctx.fillRect(point.x * cellSize, point.y * cellSize, cellSize, cellSize);
+                        }
+                    }
+                    
+                    // Position actuelle de la tortue
+                    const current = solution[animationIndex];
+                    ctx.fillStyle = '#9b59b6';
+                    ctx.beginPath();
+                    ctx.arc(current.x * cellSize + cellSize/2, current.y * cellSize + cellSize/2, cellSize/3, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Redessiner départ et arrivée
+                    ctx.fillStyle = '#27ae60';
+                    ctx.fillRect(0, 0, cellSize, cellSize);
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.fillRect((width-1) * cellSize, (height-1) * cellSize, cellSize, cellSize);
+                    
+                    animationIndex++;
+                    setTimeout(animate, 100);
+                } else {
+                    isAnimating = false;
+                    document.getElementById('animateBtn').disabled = false;
+                }
+            }
+            
+            animate();
+        }
+        
+        function resetMaze() {
+            solution = [];
+            animationIndex = 0;
+            isAnimating = false;
+            if (maze.length > 0) {
+                drawMaze();
+                document.getElementById('info').textContent = 'Labyrinthe remis à zéro';
+            }
+            document.getElementById('animateBtn').disabled = true;
+            document.getElementById('steps').style.display = 'none';
+        }
+        
+        function showSteps() {
+            const stepsDiv = document.getElementById('steps');
+            const stepsList = document.getElementById('stepsList');
+            
+            stepsList.innerHTML = '';
+            
+            const steps = [
+                `🎯 Départ: Case (0, 0) - coin supérieur gauche`,
+                `🏁 Arrivée: Case (${width-1}, ${height-1}) - coin inférieur droit`,
+                `📏 Chemin trouvé: ${solution.length} cases au total`,
+                `🧮 Algorithme utilisé: Recherche en largeur (BFS)`,
+                `⏱️ Le chemin est optimal (plus court possible)`
+            ];
+            
+            steps.forEach(step => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step';
+                stepDiv.textContent = step;
+                stepsList.appendChild(stepDiv);
+            });
+            
+            stepsDiv.style.display = 'block';
+        }
+        
+        // Initialisation
+        window.onload = function() {
+            init();
+        };
+    </script>
+</body>
+</html>
