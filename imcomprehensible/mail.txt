@@ -1,0 +1,17 @@
+J’ai besoin de votre aide. En explorant d’anciens échanges internes du musée, j’ai découvert un e-mail bizarrement chiffré, oublié dans les archives numériques. Il a été envoyé à la fin de l’année 2024, peu avant les 10 ans du Musée des Confluences.
+
+Or, à l’époque, coïncidence ou pas, une œuvre exceptionnelle devait être prêtée pour célébrer l’anniversaire du musée, mais cela ne s’est jamais produit. Aucun document officiel n’explique pourquoi. Ce courriel semble y faire référence… mais il est crypté, et personne ici ne sait comment le déchiffrer. 
+
+En consultant les anciens comptes, j’ai aussi remarqué que l’ancien directeur du musée échangeait souvent avec un conservateur féru de cryptographie, et dont le fils était en BUT informatique. 
+
+Et si ce message avait été chiffré avec un algorithme issu de leurs échanges secrets ?
+
+Je vous joins ci-dessous la transcription brute du message crypté.
+
+Je sais que l’ancien directeur avait des manies : il écrivait toujours en lettres majuscules sans accents, et n’utilisait que des lettres majuscules dans ses mots de passe.
+
+Pouvez-vous m’aider à déchiffrer ce message et me donner le nom de l'œuvre dont il parle ? 
+
+Merci d’avance,
+
+La directrice du Musée des Confluences

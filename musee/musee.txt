@@ -1,0 +1,15 @@
+ Le niveau des eaux du Rhône et de la Saône montent sans cesse. Les œuvres des niveaux inférieurs du musée des Confluences sont peut-être en péril. Le directeur décide de déplacer les œuvres les plus précieuses vers une salle de stockage située au dernier étage du musée. Il ne souhaite sacrifier aucune des cinq collections d’œuvres du musée venant des cinq continents : Afrique, Amérique, Asie, Europe, Océanie. Il choisit donc de sélectionner exactement le même nombre d’œuvres dans chaque collection, tout en essayant de maximiser la valeur globale de la sélection basée sur la formule suivante :
+
+valeur_totale = 0.6 valeur_artistique + 0.4 valeur_historique.
+
+Votre objectif est de lui proposer une sélection parmi la liste des œuvres contenue dans le fichier au format JSON (donnees.json) et un placement des œuvres sélectionnées dans la salle de stockage, en respectant l’équilibre entre les familles d’œuvres tout en maximisant la valeur globale de la sélection.
+Le fichier indique les dimensions de la salle de stockage qui est rectangulaire : largeur et longueur en mètres. Il indique également la liste des œuvres, avec, pour chaque œuvre, les dimensions de la caisse rectangulaire qui la contient (longueur et largeur en mètres), ses valeurs artistique et historique, et sa catégorie.
+Il faut noter que la sélection doit tenir entièrement dans la salle, les œuvres doivent être rangées sans chevauchement et en respectant leur orientation d’origine (pas de rotation pour faciliter le déplacement).
+
+Votre proposition doit être stockée dans un fichier au format JSON qui indique la liste des œuvres sélectionnées et leur position (x,y) dans la salle du type :
+
+[
+{ "id": "VaseAbydos", "x": 0.0, "y": 0.0 },
+{ "id": "VenusMilo", "x": 2.0, "y": 0.0 },
+{ "id": "NattierPortrait", "x": 0.0, "y": 2.5 }
+]
