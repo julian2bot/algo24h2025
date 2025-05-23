@@ -10,6 +10,8 @@ def vigenere_decrypt(ciphertext, key):
     return plaintext
 
 ciphertext = "LLRXLRVOEHBNAEROQFNEEWZRVICOMANUWFMACDVXFRCMZOTRWELIKRWTMLVTCSZACANSVUQRMEKRQYNSUHVBVMVHAYNSEBUCQERVZRYRVVMACAEWTRBNVQCSQAIVLRBOEMIEMIEDOVEEIQGPNSFHCIAEJPITRSKUIYNSJRVGDNYBUANACDVNCUIHIYJLLPQRAEVWIHGRVITRCSJXZYNALOMHACFPXBBIKLWABAEVTVPNVGPBAIQRVCUOEJMYNSGHKGJTVXZQJNJXVRJTDRACQEIHNYXTKDVGNEKPMQRTRWQINRVYMYJNKXVRXBJHZIJTZRVZNTZFCYNUJHMGBEEVQOUEUXUBWDVYMTNTRO"
-key = "MONALISA"
+key = "JARDIN" # car Claude Monet est célèbre pour son jardin à Giverny.
+                # L’ancien directeur et le conservateur avaient probablement choisi une clé symbolique et culturelle.
+                # "JARDIN" est un mot de 6 lettres, en lien direct avec l’œuvre décrite.
 plaintext = vigenere_decrypt(ciphertext, key)
 print(plaintext)
