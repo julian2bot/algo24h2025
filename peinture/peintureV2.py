@@ -1,3 +1,4 @@
+# test de toute les formats generiques d'images 
 from PIL import Image
 import numpy as np
 
@@ -8,7 +9,7 @@ def txt_vers_str(chemin_fichier):
     return contenu
 
 # Chargement des données
-donnees = txt_vers_str("peinture3.txt")
+donnees = txt_vers_str("data/peinture3.txt")
 
 # Tailles d'image à tester (formats courants)
 formats = {

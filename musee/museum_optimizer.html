@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimiseur Musée des Confluences</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            min-height: 80vh;
+        }
+        
+        .controls {
+            width: 300px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .visualization {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-input {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            text-align: center;
+            background: white;
+        }
+        
+        .file-input input {
+            display: none;
+        }
+        
+        .file-input label {
+            cursor: pointer;
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .stats {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stats h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+        
+        .category-count {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            position: relative;
+        }
+        
+        #canvas {
+            border: none;
+            display: block;
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .download-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ Optimiseur Musée des Confluences</h1>
+            <p>Sélection et placement optimal des œuvres d'art</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="controls">
+                <div class="file-input">
+                    <input type="file" id="fileInput" accept=".json">
+                    <label for="fileInput">
+                        📁 Charger le fichier JSON<br>
+                        <small>Sélectionnez donnees.json</small>
+                    </label>
+                </div>
+                
+                <button class="btn" id="optimizeBtn" disabled>
+                    🎯 Optimiser la Sélection
+                </button>
+                
+                <div class="stats" id="dataStats" style="display: none;">
+                    <h3>📊 Données Chargées</h3>
+                    <div id="statsContent"></div>
+                </div>
+                
+                <div class="stats" id="optimizationStats" style="display: none;">
+                    <h3>🏆 Résultats d'Optimisation</h3>
+                    <div id="optimizationContent"></div>
+                    <div class="progress">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="download-section" id="downloadSection" style="display: none;">
+                    <h4>💾 Télécharger les Résultats</h4>
+                    <button class="btn" id="downloadBtn">
+                        📥 Télécharger JSON
+                    </button>
+                </div>
+            </div>
+            
+            <div class="visualization">
+                <div class="canvas-container">
+                    <canvas id="canvas"></canvas>
+                </div>
+                <div class="legend" id="legend"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let museumData = null;
+        let optimizedResult = null;
+        let canvas, ctx;
+        
+        const categoryColors = {
+            'Afrique': '#FF6B6B',
+            'Amerique': '#4ECDC4', 
+            'Asie': '#45B7D1',
+            'Europe': '#96CEB4',
+            'Oceanie': '#FFEAA7'
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            document.getElementById('fileInput').addEventListener('change', handleFileLoad);
+            document.getElementById('optimizeBtn').addEventListener('click', optimizeSelection);
+            document.getElementById('downloadBtn').addEventListener('click', downloadResult);
+            
+            setupCanvas();
+        });
+        
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    museumData = JSON.parse(e.target.result);
+                    displayDataStats();
+                    document.getElementById('optimizeBtn').disabled = false;
+                    setupCanvas();
+                } catch (error) {
+                    alert('Erreur lors du chargement du fichier JSON: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function displayDataStats() {
+            const stats = document.getElementById('dataStats');
+            const content = document.getElementById('statsContent');
+            
+            const categoryCounts = {};
+            museumData.oeuvres.forEach(oeuvre => {
+                categoryCounts[oeuvre.categorie] = (categoryCounts[oeuvre.categorie] || 0) + 1;
+            });
+            
+            let html = `
+                <div><strong>Salle:</strong> ${museumData.largeur_salle}×${museumData.longueur_salle}m</div>
+                <div><strong>Total œuvres:</strong> ${museumData.oeuvres.length}</div>
+                <hr>
+            `;
+            
+            Object.entries(categoryCounts).forEach(([cat, count]) => {
+                html += `<div class="category-count">
+                    <span>${cat}:</span><strong>${count}</strong>
+                </div>`;
+            });
+            
+            content.innerHTML = html;
+            stats.style.display = 'block';
+        }
+        
+        function setupCanvas() {
+            if (!museumData) return;
+            
+            const containerWidth = canvas.parentElement.clientWidth - 4;
+            const containerHeight = canvas.parentElement.clientHeight - 4;
+            
+            const scale = Math.min(
+                containerWidth / museumData.largeur_salle,
+                containerHeight / museumData.longueur_salle
+            ) * 0.9;
+            
+            canvas.width = museumData.largeur_salle * scale;
+            canvas.height = museumData.longueur_salle * scale;
+            
+            drawRoom();
+            setupLegend();
+        }
+        
+        function drawRoom() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Fond de la salle
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Bordure
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+            
+            // Quadrillage
+            ctx.strokeStyle = '#dee2e6';
+            ctx.lineWidth = 1;
+            const gridSize = Math.min(canvas.width, canvas.height) / 10;
+            
+            for (let i = gridSize; i < canvas.width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let i = gridSize; i < canvas.height; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+        }
+        
+        function setupLegend() {
+            const legend = document.getElementById('legend');
+            legend.innerHTML = '';
+            
+            Object.entries(categoryColors).forEach(([category, color]) => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `
+                    <div class="legend-color" style="background-color: ${color}"></div>
+                    <span>${category}</span>
+                `;
+                legend.appendChild(item);
+            });
+        }
+        
+        function optimizeSelection() {
+            if (!museumData) return;
+            
+            const btn = document.getElementById('optimizeBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Optimisation en cours...';
+            
+            // Simulation de progression
+            const progressBar = document.getElementById('progressBar');
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressBar.style.width = progress + '%';
+            }, 100);
+            
+            // Lancement de l'optimisation
+            setTimeout(() => {
+                try {
+                    optimizedResult = performOptimization();
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '100%';
+                    
+                    displayOptimizationResults();
+                    drawOptimizedLayout();
+                    
+                    btn.textContent = '✅ Optimisation Terminée';
+                    document.getElementById('downloadSection').style.display = 'block';
+                } catch (error) {
+                    clearInterval(progressInterval);
+                    alert('Erreur durant l\'optimisation: ' + error.message);
+                    btn.textContent = '🎯 Optimiser la Sélection';
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+        
+        function performOptimization() {
+            // Étape 1: Calculer la valeur totale pour chaque œuvre
+            const oeuvresTotales = museumData.oeuvres.map(oeuvre => ({
+                ...oeuvre,
+                valeur_totale: 0.6 * oeuvre.valeur_artistique + 0.4 * oeuvre.valeur_historique
+            }));
+            
+            // Étape 2: Grouper par catégorie et trier par valeur décroissante
+            const parCategorie = {};
+            oeuvresTotales.forEach(oeuvre => {
+                if (!parCategorie[oeuvre.categorie]) {
+                    parCategorie[oeuvre.categorie] = [];
+                }
+                parCategorie[oeuvre.categorie].push(oeuvre);
+            });
+            
+            // Trier chaque catégorie par valeur décroissante
+            Object.keys(parCategorie).forEach(cat => {
+                parCategorie[cat].sort((a, b) => b.valeur_totale - a.valeur_totale);
+            });
+            
+            // Étape 3: Recherche du nombre optimal d'œuvres par catégorie
+            const categories = Object.keys(parCategorie);
+            let meilleurResultat = null;
+            let meilleurScore = 0;
+            
+            // Tester différents nombres d'œuvres par catégorie (de 1 à 10)
+            for (let nbParCategorie = 1; nbParCategorie <= 10; nbParCategorie++) {
+                // Vérifier qu'on a assez d'œuvres dans chaque catégorie
+                let possible = true;
+                for (let cat of categories) {
+                    if (parCategorie[cat].length < nbParCategorie) {
+                        possible = false;
+                        break;
+                    }
+                }
+                
+                if (!possible) continue;
+                
+                // Sélectionner les meilleures œuvres de chaque catégorie
+                const selection = [];
+                categories.forEach(cat => {
+                    selection.push(...parCategorie[cat].slice(0, nbParCategorie));
+                });
+                
+                // Tenter de placer cette sélection
+                const placement = tentePlacement(selection);
+                if (placement.success) {
+                    const scoreTotal = selection.reduce((sum, oeuvre) => sum + oeuvre.valeur_totale, 0);
+                    if (scoreTotal > meilleurScore) {
+                        meilleurScore = scoreTotal;
+                        meilleurResultat = {
+                            selection: selection,
+                            placement: placement.positions,
+                            nbParCategorie: nbParCategorie,
+                            scoreTotal: scoreTotal
+                        };
+                    }
+                }
+            }
+            
+            if (!meilleurResultat) {
+                throw new Error('Impossible de trouver une configuration valide');
+            }
+            
+            return meilleurResultat;
+        }
+        
+        function tentePlacement(oeuvres) {
+            // Algorithme de placement simple (First Fit Decreasing)
+            const positions = [];
+            const occupationZones = [];
+            
+            // Trier par superficie décroissante pour un meilleur placement
+            const oeuvresTriees = [...oeuvres].sort((a, b) => 
+                (b.largeur * b.longueur) - (a.largeur * a.longueur)
+            );
+            
+            for (let oeuvre of oeuvresTriees) {
+                let placee = false;
+                
+                // Essayer de placer l'œuvre à différentes positions
+                for (let y = 0; y <= museumData.longueur_salle - oeuvre.longueur; y += 0.1) {
+                    for (let x = 0; x <= museumData.largeur_salle - oeuvre.largeur; x += 0.1) {
+                        if (peutPlacer(x, y, oeuvre.largeur, oeuvre.longueur, occupationZones)) {
+                            positions.push({
+                                id: oeuvre.id,
+                                x: Math.round(x * 10) / 10,
+                                y: Math.round(y * 10) / 10
+                            });
+                            occupationZones.push({
+                                x1: x,
+                                y1: y,
+                                x2: x + oeuvre.largeur,
+                                y2: y + oeuvre.longueur
+                            });
+                            placee = true;
+                            break;
+                        }
+                    }
+                    if (placee) break;
+                }
+                
+                if (!placee) {
+                    return { success: false };
+                }
+            }
+            
+            return { success: true, positions: positions };
+        }
+        
+        function peutPlacer(x, y, largeur, longueur, zones) {
+            // Vérifier les limites de la salle
+            if (x + largeur > museumData.largeur_salle || y + longueur > museumData.longueur_salle) {
+                return false;
+            }
+            
+            // Vérifier les chevauchements avec les zones occupées
+            for (let zone of zones) {
+                if (!(x >= zone.x2 || x + largeur <= zone.x1 || 
+                      y >= zone.y2 || y + longueur <= zone.y1)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function displayOptimizationResults() {
+            const stats = document.getElementById('optimizationStats');
+            const content = document.getElementById('optimizationContent');
+            
+            const categoryCounts = {};
+            optimizedResult.selection.forEach(oeuvre => {
+                categoryCounts[oeuvre.categorie] = (categoryCounts[oeuvre.categorie] || 0) + 1;
+            });
+            
+            let html = `
+                <div><strong>Œuvres sélectionnées:</strong> ${optimizedResult.selection.length}</div>
+                <div><strong>Par catégorie:</strong> ${optimizedResult.nbParCategorie}</div>
+                <div><strong>Score total:</strong> ${Math.round(optimizedResult.scoreTotal)}</div>
+                <hr>
+            `;
+            
+            Object.entries(categoryCounts).forEach(([cat, count]) => {
+                html += `<div class="category-count">
+                    <span>${cat}:</span><strong>${count}</strong>
+                </div>`;
+            });
+            
+            content.innerHTML = html;
+            stats.style.display = 'block';
+        }
+        
+        function drawOptimizedLayout() {
+            if (!optimizedResult) return;
+            
+            drawRoom();
+            
+            const scaleX = canvas.width / museumData.largeur_salle;
+            const scaleY = canvas.height / museumData.longueur_salle;
+            
+            // Créer un mapping des œuvres pour récupérer facilement les dimensions
+            const oeuvreMap = {};
+            optimizedResult.selection.forEach(oeuvre => {
+                oeuvreMap[oeuvre.id] = oeuvre;
+            });
+            
+            // Dessiner chaque œuvre placée
+            optimizedResult.placement.forEach((pos, index) => {
+                const oeuvre = oeuvreMap[pos.id];
+                if (!oeuvre) return;
+                
+                const x = pos.x * scaleX;
+                const y = pos.y * scaleY;
+                const width = oeuvre.largeur * scaleX;
+                const height = oeuvre.longueur * scaleY;
+                
+                // Couleur selon la catégorie
+                ctx.fillStyle = categoryColors[oeuvre.categorie] || '#6c757d';
+                ctx.fillRect(x, y, width, height);
+                
+                // Bordure
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, width, height);
+                
+                // Texte (si la taille le permet)
+                if (width > 60 && height > 30) {
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    const shortId = oeuvre.id.substring(0, 12) + (oeuvre.id.length > 12 ? '...' : '');
+                    ctx.fillText(shortId, x + width/2, y + height/2 - 5);
+                    ctx.fillText(`V:${Math.round(oeuvre.valeur_totale)}`, x + width/2, y + height/2 + 10);
+                }
+            });
+        }
+        
+        function downloadResult() {
+            if (!optimizedResult) return;
+            
+            const jsonResult = JSON.stringify(optimizedResult.placement, null, 2);
+            const blob = new Blob([jsonResult], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'selection_optimisee_confluences.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Redimensionnement responsive
+        window.addEventListener('resize', function() {
+            if (museumData) {
+                setupCanvas();
+                if (optimizedResult) {
+                    drawOptimizedLayout();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
